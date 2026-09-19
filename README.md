@@ -73,4 +73,5 @@ curl --no-buffer http://127.0.0.1:8080/v1/chat/completions \
 Of course not! Here are some examples of same idea and different approach:
 
 * [tucats/fmProxy](https://github.com/tucats/fmProxy) ==> Swift, but using the Ollama API instead
-* [gregbarbosa/fm-proxy](https://github.com/gregbarbosa/fm-proxy) ==> node.js, with more features 
+* [gregbarbosa/fm-proxy](https://github.com/gregbarbosa/fm-proxy) ==> node.js, with more features
+* [shibukawa/fmproxy](https://github.com/shibukawa/fmproxy) ==> GoLang
