@@ -1,0 +1,45 @@
+import Foundation
+
+struct ServerConfiguration {
+    let host: String
+    let port: UInt16
+    let showHelp: Bool
+
+    static let usage = """
+    Usage: fmproxy-bin [options]
+
+    Options:
+      --host <host>   Bind host (default: 127.0.0.1)
+      --port <port>   Listen port (default: 8080)
+      --help, -h      Show this help and exit
+    """
+
+    init(arguments: [String]) {
+        var host = "127.0.0.1"
+        var port: UInt16 = 8080
+        var showHelp = false
+        var index = 1
+
+        while index < arguments.count {
+            switch arguments[index] {
+            case "--help", "-h":
+                showHelp = true
+                index += 1
+            case "--host" where index + 1 < arguments.count:
+                host = arguments[index + 1]
+                index += 2
+            case "--port" where index + 1 < arguments.count:
+                if let value = UInt16(arguments[index + 1]), value > 0 {
+                    port = value
+                }
+                index += 2
+            default:
+                index += 1
+            }
+        }
+
+        self.host = host
+        self.port = port
+        self.showHelp = showHelp
+    }
+}
