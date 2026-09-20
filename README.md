@@ -16,6 +16,17 @@ xcodebuild -project FMProxy.xcodeproj -scheme FMProxy -configuration Release bui
 
 or use the provided `build.sh` script.
 
+Run the unit tests from Xcode with **Product → Test** (`Command-U`). The project includes an `FMProxyTests` target covering request parsing, validation, configuration, and response serialization. Tests can also be run from Terminal:
+
+```bash
+xcodebuild \
+  -project FMProxy.xcodeproj \
+  -scheme FMProxy \
+  -configuration Debug \
+  CODE_SIGNING_ALLOWED=NO \
+  test
+```
+
 ## Run
 
 Build the standalone Apple Silicon binary with the provided script:
@@ -61,7 +72,19 @@ Every completed request is logged compactly to the console. Request bodies and m
 
 The chat endpoint accepts `messages` with the `system`, `user`, and `assistant` roles. `stream: false` returns a regular JSON response. With `stream: true`, OpenAI-compatible Server-Sent Events (`chat.completion.chunk`) are sent, followed by `data: [DONE]`. OpenAI token statistics are returned as `0` because the Foundation Models API does not provide them in a compatible format.
 
-Structured output is supported through OpenAI-compatible `response_format` values of `json_object` and `json_schema`. JSON Schema responses are generated using Foundation Models constrained generation and validated by the proxy before being returned.
+Foundation Model generations are processed one at a time to limit resource usage. Additional chat completion requests wait in FIFO order. Health and model-list requests remain available while a generation is running.
+
+Structured output is supported through OpenAI-compatible `response_format` values of `json_object` and `json_schema`. JSON Schema responses are generated using Foundation Models constrained generation and validated by the proxy before being returned. Validation covers common JSON Schema constraints including types, required and additional properties, arrays, strings, numbers, enums, constants, and common schema combinations. Invalid structured output is returned as an error rather than a successful completion.
+
+## HTTP limits
+
+The server accepts requests with:
+
+- Headers up to 64 KiB
+- Bodies up to 10 MiB
+- A 30-second timeout for incomplete requests
+
+Oversized requests return `413 Payload Too Large`. Malformed requests return `400 Bad Request`. Requests must provide a regular `Content-Length` body; chunked transfer encoding is not supported.
 
 ## Example
 
