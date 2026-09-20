@@ -60,6 +60,8 @@ Every completed request is logged compactly to the console. Request bodies and m
 
 The chat endpoint accepts `messages` with the `system`, `user`, and `assistant` roles. `stream: false` returns a regular JSON response. With `stream: true`, OpenAI-compatible Server-Sent Events (`chat.completion.chunk`) are sent, followed by `data: [DONE]`. OpenAI token statistics are returned as `0` because the Foundation Models API does not provide them in a compatible format.
 
+Structured output is supported through OpenAI-compatible `response_format` values of `json_object` and `json_schema`. JSON Schema responses are generated using Foundation Models constrained generation and validated by the proxy before being returned.
+
 ## Example
 
 ```bash
