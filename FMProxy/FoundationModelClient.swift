@@ -66,6 +66,11 @@ struct FoundationModelClient: Sendable {
             object["title"] = object["title"] ?? .string(title)
         }
         if case .string("string")? = object["type"], object["enum"] == nil {
+            // Foundation Models currently requires an enum field for unconstrained
+            // string properties. An empty enum is interpreted by GenerationSchema
+            // as an unconstrained string; omitting it causes constrained generation
+            // to reject otherwise valid string schemas. This normalization only
+            // affects the generated Foundation Models schema, not the input schema.
             object["enum"] = .array([])
         }
 
