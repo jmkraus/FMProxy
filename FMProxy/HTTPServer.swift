@@ -198,6 +198,7 @@ final class HTTPServer: @unchecked Sendable {
     }
 
     private func log(_ request: HTTPRequest, status: Int, duration: TimeInterval) {
+        guard !configuration.noLogs else { return }
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let milliseconds = Int(duration * 1_000)
         print("[\(timestamp)] \(request.method) \(request.path) -> \(status) (\(milliseconds) ms)")

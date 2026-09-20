@@ -42,6 +42,7 @@ The default configuration listens on `127.0.0.1:8080`. Parameters can be supplie
 |---|---|---|
 | `--host <host>` | Host address to bind to | `127.0.0.1` |
 | `--port <port>` | TCP port to listen on | `8080` |
+| `--no-logs` | Suppress logging output | — |
 | `--help`, `-h` | Show available options and exit | — |
 
 ## Endpoints

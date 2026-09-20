@@ -3,6 +3,7 @@ import Foundation
 struct ServerConfiguration {
     let host: String
     let port: UInt16
+    let noLogs: Bool
     let showHelp: Bool
 
     static let usage = """
@@ -11,12 +12,14 @@ struct ServerConfiguration {
     Options:
       --host <host>   Bind host (default: 127.0.0.1)
       --port <port>   Listen port (default: 8080)
+      --no-logs       Suppress request logging
       --help, -h      Show this help and exit
     """
 
     init(arguments: [String]) {
         var host = "127.0.0.1"
         var port: UInt16 = 8080
+        var noLogs = false
         var showHelp = false
         var index = 1
 
@@ -33,6 +36,9 @@ struct ServerConfiguration {
                     port = value
                 }
                 index += 2
+            case "--no-logs":
+                noLogs = true
+                index += 1
             default:
                 index += 1
             }
@@ -40,6 +46,7 @@ struct ServerConfiguration {
 
         self.host = host
         self.port = port
+        self.noLogs = noLogs
         self.showHelp = showHelp
     }
 }
