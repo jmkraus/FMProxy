@@ -4,6 +4,7 @@ struct ServerConfiguration {
     let host: String
     let port: UInt16
     let noLogs: Bool
+    let validateStructuredOutput: Bool
     let showHelp: Bool
 
     static let usage = """
@@ -13,6 +14,8 @@ struct ServerConfiguration {
       --host <host>   Bind host (default: 127.0.0.1)
       --port <port>   Listen port (default: 8080)
       --no-logs       Suppress request logging
+      --validate-structured-output
+                      Validate generated JSON against the requested schema
       --help, -h      Show this help and exit
     """
 
@@ -20,6 +23,7 @@ struct ServerConfiguration {
         var host = "127.0.0.1"
         var port: UInt16 = 8080
         var noLogs = false
+        var validateStructuredOutput = false
         var showHelp = false
         var index = 1
 
@@ -39,6 +43,9 @@ struct ServerConfiguration {
             case "--no-logs":
                 noLogs = true
                 index += 1
+            case "--validate-structured-output":
+                validateStructuredOutput = true
+                index += 1
             default:
                 index += 1
             }
@@ -47,6 +54,7 @@ struct ServerConfiguration {
         self.host = host
         self.port = port
         self.noLogs = noLogs
+        self.validateStructuredOutput = validateStructuredOutput
         self.showHelp = showHelp
     }
 }

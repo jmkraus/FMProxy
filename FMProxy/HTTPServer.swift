@@ -6,7 +6,7 @@ actor HTTPServer {
     private let configuration: ServerConfiguration
     private let listener: NWListener
     private let queue = DispatchQueue(label: "FMProxy.HTTPServer")
-    private let handler = ChatCompletionsHandler()
+    private let handler: ChatCompletionsHandler
     private let logDateFormatter = ISO8601DateFormatter()
     private var isStopped = false
     private var stopWaiters: [CheckedContinuation<Void, Never>] = []
@@ -15,6 +15,9 @@ actor HTTPServer {
 
     init(configuration: ServerConfiguration) throws {
         self.configuration = configuration
+        self.handler = ChatCompletionsHandler(
+            validateStructuredOutput: configuration.validateStructuredOutput
+        )
 
         guard let port = NWEndpoint.Port(rawValue: configuration.port) else {
             throw ServerInitializationError.invalidPort(configuration.port)

@@ -90,7 +90,14 @@ final class FMProxyTests: XCTestCase {
         XCTAssertEqual(configuration.host, "192.168.1.10")
         XCTAssertEqual(configuration.port, 9090)
         XCTAssertTrue(configuration.noLogs)
+        XCTAssertFalse(configuration.validateStructuredOutput)
         XCTAssertFalse(configuration.showHelp)
+
+        let validationConfiguration = ServerConfiguration(arguments: [
+            "fmproxy-bin",
+            "--validate-structured-output"
+        ])
+        XCTAssertTrue(validationConfiguration.validateStructuredOutput)
     }
 
     func testHTTPResponseSerializesContentLength() {

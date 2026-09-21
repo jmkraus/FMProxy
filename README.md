@@ -54,6 +54,7 @@ The default configuration listens on `127.0.0.1:8080`. Parameters can be supplie
 | `--host <host>` | Host address to bind to | `127.0.0.1` |
 | `--port <port>` | TCP port to listen on | `8080` |
 | `--no-logs` | Suppress logging output | — |
+| `--validate-structured-output` | Validate generated JSON against the requested schema | Disabled |
 | `--help`, `-h` | Show available options and exit | — |
 
 ## Endpoints
@@ -74,7 +75,7 @@ The chat endpoint accepts `messages` with the `system`, `user`, and `assistant` 
 
 Foundation Model generations are processed one at a time to limit resource usage. Additional chat completion requests wait in FIFO order. Health and model-list requests remain available while a generation is running.
 
-Structured output is supported through OpenAI-compatible `response_format` values of `json_object` and `json_schema`. JSON Schema responses are generated using Foundation Models constrained generation and validated by the proxy before being returned. Validation covers common JSON Schema constraints including types, required and additional properties, arrays, strings, numbers, enums, constants, and common schema combinations. Invalid structured output is returned as an error rather than a successful completion.
+Structured output is supported through OpenAI-compatible `response_format` values of `json_object` and `json_schema`. JSON Schema responses are generated using Foundation Models constrained generation. The proxy always verifies that structured output is valid JSON and that `json_object` responses are objects. Full post-generation JSON Schema validation is optional and disabled by default; enable it with `--validate-structured-output`. Validation covers common JSON Schema constraints including types, required and additional properties, arrays, strings, numbers, enums, constants, and common schema combinations. When enabled, invalid structured output is returned as an error rather than a successful completion.
 
 ## HTTP limits
 

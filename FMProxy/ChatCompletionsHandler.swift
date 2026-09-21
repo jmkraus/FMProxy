@@ -2,9 +2,17 @@ import Foundation
 
 @available(macOS 26.0, *)
 struct ChatCompletionsHandler: Sendable {
-    private let modelClient = FoundationModelClient()
-    private let encoder = JSONEncoder()
-    private let modelName = "apple-foundation-model"
+    private let modelClient: FoundationModelClient
+    private let encoder: JSONEncoder
+    private let modelName: String
+    private let shouldValidateStructuredOutput: Bool
+
+    init(validateStructuredOutput: Bool = false) {
+        self.modelClient = FoundationModelClient()
+        self.encoder = JSONEncoder()
+        self.modelName = "apple-foundation-model"
+        self.shouldValidateStructuredOutput = validateStructuredOutput
+    }
 
     func handle(body: Data) async -> HTTPResponse {
         do {
@@ -15,7 +23,11 @@ struct ChatCompletionsHandler: Sendable {
 
             let content = try await modelClient.respond(to: request.messages, responseFormat: request.responseFormat)
             if let responseFormat = request.responseFormat {
-                try validateStructuredOutput(content, responseFormat: responseFormat)
+                try validateStructuredOutput(
+                    content,
+                    responseFormat: responseFormat,
+                    validateSchema: shouldValidateStructuredOutput
+                )
             }
             let response = ChatCompletionResponse(
                 id: "chatcmpl-\(UUID().uuidString.lowercased())",
@@ -110,7 +122,11 @@ struct ChatCompletionsHandler: Sendable {
         return request
     }
 
-    private func validateStructuredOutput(_ content: String, responseFormat: ResponseFormat) throws {
+    private func validateStructuredOutput(
+        _ content: String,
+        responseFormat: ResponseFormat,
+        validateSchema: Bool
+    ) throws {
         guard responseFormat.type == "json_object" || responseFormat.type == "json_schema" else { return }
         guard let data = content.data(using: .utf8), let value = try? JSONDecoder().decode(JSONValue.self, from: data) else {
             throw RequestValidationError.message("Foundation Model output was not valid JSON")
@@ -119,7 +135,7 @@ struct ChatCompletionsHandler: Sendable {
             guard case .object = value else {
                 throw RequestValidationError.message("Foundation Model output was not a JSON object")
             }
-        } else if let schema = responseFormat.jsonSchema?.schema {
+        } else if validateSchema, let schema = responseFormat.jsonSchema?.schema {
             try JSONSchemaValidator.validate(value, against: schema)
         }
     }
