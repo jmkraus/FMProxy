@@ -91,6 +91,34 @@ enum MessageContent: Decodable, Sendable {
 struct ContentPart: Decodable, Sendable {
     let type: String?
     let text: String?
+    let imageURL: ImageURL?
+
+    enum CodingKeys: String, CodingKey {
+        case type, text
+        case imageURL = "image_url"
+    }
+
+    struct ImageURL: Decodable, Sendable {
+        let url: String
+    }
+
+    func decodedImageData() throws -> Data {
+        guard let url = imageURL?.url else {
+            throw RequestValidationError.message("image_url.url is required")
+        }
+        guard let comma = url.firstIndex(of: ",") else {
+            throw RequestValidationError.message("image_url.url must be a base64 data URL")
+        }
+        let metadata = String(url[..<comma])
+        guard metadata.hasPrefix("data:image/"), metadata.contains(";base64") else {
+            throw RequestValidationError.message("image_url.url must be a base64 image data URL")
+        }
+        let encoded = String(url[url.index(after: comma)...])
+        guard let data = Data(base64Encoded: encoded, options: .ignoreUnknownCharacters), !data.isEmpty else {
+            throw RequestValidationError.message("image_url.url contains invalid base64 image data")
+        }
+        return data
+    }
 }
 
 struct ChatCompletionResponse: Encodable {

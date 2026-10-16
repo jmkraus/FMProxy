@@ -42,6 +42,20 @@ final class FMProxyTests: XCTestCase {
         }
     }
 
+    func testImageContentPartDecodesBase64DataURL() throws {
+        let json = Data(#"[{"type":"image_url","image_url":{"url":"data:image/png;base64,aGk="}}]"#.utf8)
+        let parts = try JSONDecoder().decode([ContentPart].self, from: json)
+
+        XCTAssertEqual(try parts[0].decodedImageData(), Data("hi".utf8))
+    }
+
+    func testImageContentPartRejectsNonDataURL() throws {
+        let json = Data(#"[{"type":"image_url","image_url":{"url":"https://example.com/image.png"}}]"#.utf8)
+        let parts = try JSONDecoder().decode([ContentPart].self, from: json)
+
+        XCTAssertThrowsError(try parts[0].decodedImageData())
+    }
+
     func testJSONSchemaValidatesIntegerAndRequiredProperty() throws {
         let schema: JSONValue = .object([
             "type": .string("object"),

@@ -70,10 +70,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		F00000000000000000000003 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; ENABLE_TESTABILITY = YES; SWIFT_VERSION = 6.0; MACOSX_DEPLOYMENT_TARGET = 26.0; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = Debug; };
-		F00000000000000000000004 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 6.0; MACOSX_DEPLOYMENT_TARGET = 26.0; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = Release; };
-		F00000000000000000000006 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 26.0; PRODUCT_BUNDLE_IDENTIFIER = com.jkraus.FMProxyTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0;}; name = Debug; };
-		F00000000000000000000007 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 26.0; PRODUCT_BUNDLE_IDENTIFIER = com.jkraus.FMProxyTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0;}; name = Release; };
+		F00000000000000000000003 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; ENABLE_TESTABILITY = YES; SWIFT_VERSION = 6.0; MACOSX_DEPLOYMENT_TARGET = 27.0; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = Debug; };
+		F00000000000000000000004 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 6.0; MACOSX_DEPLOYMENT_TARGET = 27.0; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = Release; };
+		F00000000000000000000006 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 27.0; PRODUCT_BUNDLE_IDENTIFIER = com.jkraus.FMProxyTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0;}; name = Debug; };
+		F00000000000000000000007 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 27.0; PRODUCT_BUNDLE_IDENTIFIER = com.jkraus.FMProxyTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0;}; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */

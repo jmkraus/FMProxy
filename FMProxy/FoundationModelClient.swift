@@ -1,10 +1,11 @@
 import Foundation
 import FoundationModels
+import ImageIO
 
-@available(macOS 26.0, *)
+@available(macOS 27.0, *)
 struct FoundationModelClient: Sendable {
     func respond(to messages: [ChatMessage], responseFormat: ResponseFormat? = nil) async throws -> String {
-        let prompt = makePrompt(from: messages, responseFormat: responseFormat)
+        let prompt = try makePrompt(from: messages, responseFormat: responseFormat)
         let session = LanguageModelSession()
 
         guard let schema = try generationSchema(for: responseFormat) else {
@@ -17,10 +18,11 @@ struct FoundationModelClient: Sendable {
     }
 
     func stream(to messages: [ChatMessage], responseFormat: ResponseFormat? = nil) -> AsyncThrowingStream<String, Error> {
-        let prompt = makePrompt(from: messages, responseFormat: responseFormat)
-        let session = LanguageModelSession()
+        do {
+            let prompt = try makePrompt(from: messages, responseFormat: responseFormat)
+            let session = LanguageModelSession()
 
-        return AsyncThrowingStream { continuation in
+            return AsyncThrowingStream { continuation in
             Task {
                 do {
                     if let schema = try generationSchema(for: responseFormat) {
@@ -41,6 +43,9 @@ struct FoundationModelClient: Sendable {
                     continuation.finish(throwing: error)
                 }
             }
+        }
+        } catch {
+            return AsyncThrowingStream { $0.finish(throwing: error) }
         }
     }
 
@@ -96,28 +101,51 @@ struct FoundationModelClient: Sendable {
         return false
     }
 
-    private func makePrompt(from messages: [ChatMessage], responseFormat: ResponseFormat?) -> String {
-        let conversation = messages.map { message in
-            let content = message.content?.textValue ?? ""
-            return "\(message.role.uppercased()):\n\(content)"
-        }.joined(separator: "\n\n")
+    private func makePrompt(from messages: [ChatMessage], responseFormat: ResponseFormat?) throws -> Prompt {
+        var components: [Prompt] = []
 
-        guard let responseFormat else {
-            return conversation + "\n\nASSISTANT:"
+        for message in messages {
+            components.append(Prompt("\(message.role.uppercased()):"))
+            guard case .parts(let parts)? = message.content else {
+                if case .text(let text)? = message.content {
+                    components.append(Prompt(text))
+                }
+                continue
+            }
+
+            for part in parts {
+                switch part.type {
+                case "text":
+                    components.append(Prompt(part.text ?? ""))
+                case "image_url":
+                    let data = try part.decodedImageData()
+                    guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+                          let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+                        throw RequestValidationError.message("image data is not a supported image")
+                    }
+                    let attachment = Attachment<ImageAttachmentContent>(image)
+                    components.append(Prompt(attachment))
+                default:
+                    throw RequestValidationError.message("unsupported content part type: \(part.type ?? "missing")")
+                }
+            }
         }
 
-        let instruction: String
-        switch responseFormat.type {
-        case "json_object":
-            instruction = "Return only a valid JSON object. Do not use Markdown fences or add explanatory text."
-        case "json_schema" where responseFormat.jsonSchema != nil:
-            let schemaData = try? JSONEncoder().encode(responseFormat.jsonSchema!.schema)
-            let schema = schemaData.flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
-            instruction = "Return only valid JSON matching this JSON Schema. Do not use Markdown fences or add explanatory text. JSON Schema: \(schema)"
-        default:
-            instruction = ""
+        components.append(Prompt("ASSISTANT:"))
+
+        if let responseFormat {
+            switch responseFormat.type {
+            case "json_object":
+                components.append(Prompt("Return only a valid JSON object. Do not use Markdown fences or add explanatory text."))
+            case "json_schema" where responseFormat.jsonSchema != nil:
+                let schemaData = try JSONEncoder().encode(responseFormat.jsonSchema!.schema)
+                let schema = String(data: schemaData, encoding: .utf8) ?? "{}"
+                components.append(Prompt("Return only valid JSON matching this JSON Schema. Do not use Markdown fences or add explanatory text. JSON Schema: \(schema)"))
+            default:
+                break
+            }
         }
 
-        return conversation + "\n\nASSISTANT:\n" + instruction
+        return Prompt { components }
     }
 }

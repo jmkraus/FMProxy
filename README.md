@@ -1,22 +1,137 @@
 # FMProxy
 
-A local OpenAI-compatible chat completions proxy for Apple Foundation Models on macOS 26 Tahoe.
+A lightweight, local OpenAI-compatible API proxy for Apple Foundation Models.
+
+## Features
+
+- OpenAI-compatible `POST /v1/chat/completions`
+- Streaming and non-streaming responses
+- Text and base64-encoded image input
+- Structured output with `json_object` and `json_schema`
+- Optional JSON Schema validation
+- No API keys or external services required
 
 ## Requirements
 
-- macOS 26.0 or later
-- Xcode with the macOS 26 SDK
-- Apple Foundation Models must be available on the Mac
+- macOS 27.0 or later
+- Apple Silicon Mac with Apple Foundation Models available
+- Xcode with the macOS 27 SDK
 
 ## Build
 
+Build with Xcode:
+
 ```bash
-xcodebuild -project FMProxy.xcodeproj -scheme FMProxy -configuration Release build
+xcodebuild \
+  -project FMProxy.xcodeproj \
+  -scheme FMProxy \
+  -configuration Release \
+  build
 ```
 
-or use the provided `build.sh` script.
+Or use the build script:
 
-Run the unit tests from Xcode with **Product → Test** (`Command-U`). The project includes an `FMProxyTests` target covering request parsing, validation, configuration, and response serialization. Tests can also be run from Terminal:
+```bash
+./build.sh
+```
+
+This creates `fmproxy-bin` in the repository root.
+
+## Run
+
+```bash
+./fmproxy-bin
+```
+
+The server listens on `127.0.0.1:8080` by default.
+
+```bash
+./fmproxy-bin --host 127.0.0.1 --port 8080
+```
+
+### Options
+
+| Option | Default | Description |
+|---|---:|---|
+| `--host <host>` | `127.0.0.1` | Address to bind to |
+| `--port <port>` | `8080` | Port to listen on |
+| `--no-logs` | — | Disable request logging |
+| `--validate-structured-output` | disabled | Validate JSON Schema responses |
+| `--help`, `-h` | — | Show help |
+
+## API
+
+### Endpoints
+
+- `GET /health`
+- `GET /v1/models`
+- `POST /v1/chat/completions`
+
+### Text completion
+
+```bash
+curl http://127.0.0.1:8080/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "apple-foundation-model",
+    "messages": [
+      {"role": "user", "content": "Explain Swift in one sentence."}
+    ]
+  }'
+```
+
+Set `"stream": true` to receive an OpenAI-compatible Server-Sent Events response.
+
+### Image input
+
+Images are accepted as OpenAI-style `image_url` content parts. Use a base64 data URL:
+
+```bash
+curl http://127.0.0.1:8080/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "apple-foundation-model",
+    "messages": [{
+      "role": "user",
+      "content": [
+        {"type": "text", "text": "What is in this image?"},
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "data:image/png;base64,<base64-data>"
+          }
+        }
+      ]
+    }]
+  }'
+```
+
+Supported image data URLs use the `data:image/...;base64,...` format. Remote image URLs are not downloaded.
+
+### Structured output
+
+Use the OpenAI-compatible `response_format` field with `json_object` or `json_schema`:
+
+```json
+{
+  "model": "apple-foundation-model",
+  "messages": [
+    {"role": "user", "content": "Return a person named Ada."}
+  ],
+  "response_format": {
+    "type": "json_object"
+  }
+}
+```
+
+## Limits
+
+- Maximum request body: 10 MiB
+- Maximum headers: 64 KiB
+- Request timeout: 30 seconds
+- Chunked transfer encoding is not supported
+
+## Tests
 
 ```bash
 xcodebuild \
@@ -27,78 +142,12 @@ xcodebuild \
   test
 ```
 
-## Run
+## Related Projects
 
-Build the standalone Apple Silicon binary with the provided script:
+- [tucats/fmProxy](https://github.com/tucats/fmProxy)
+- [gregbarbosa/fm-proxy](https://github.com/gregbarbosa/fm-proxy)
+- [shibukawa/fmproxy](https://github.com/shibukawa/fmproxy)
 
-```bash
-./build.sh
-```
+## License
 
-Then start the generated binary directly from the repository root:
-
-```bash
-./fmproxy-bin
-```
-
-The default configuration listens on `127.0.0.1:8080`. Parameters can be supplied when starting the binary:
-
-```bash
-./fmproxy-bin --host 127.0.0.1 --port 8080
-```
-
-### Command-line options
-
-| Option | Description | Default |
-|---|---|---|
-| `--host <host>` | Host address to bind to | `127.0.0.1` |
-| `--port <port>` | TCP port to listen on | `8080` |
-| `--no-logs` | Suppress logging output | — |
-| `--validate-structured-output` | Validate generated JSON against the requested schema | Disabled |
-| `--help`, `-h` | Show available options and exit | — |
-
-## Endpoints
-
-- `GET /health`
-- `GET /v1/models`
-- `POST /v1/chat/completions`
-
-## Logging
-
-Every completed request is logged compactly to the console. Request bodies and model content are not logged.
-
-```text
-[2026-09-16T19:30:00Z] POST /v1/chat/completions -> 200 (842 ms)
-```
-
-The chat endpoint accepts `messages` with the `system`, `user`, and `assistant` roles. `stream: false` returns a regular JSON response. With `stream: true`, OpenAI-compatible Server-Sent Events (`chat.completion.chunk`) are sent, followed by `data: [DONE]`. OpenAI token statistics are returned as `0` because the Foundation Models API does not provide them in a compatible format.
-
-Foundation Model generations are processed one at a time to limit resource usage. Additional chat completion requests wait in FIFO order. Health and model-list requests remain available while a generation is running.
-
-Structured output is supported through OpenAI-compatible `response_format` values of `json_object` and `json_schema`. JSON Schema responses are generated using Foundation Models constrained generation. The proxy always verifies that structured output is valid JSON and that `json_object` responses are objects. Full post-generation JSON Schema validation is optional and disabled by default; enable it with `--validate-structured-output`. Validation covers common JSON Schema constraints including types, required and additional properties, arrays, strings, numbers, enums, constants, and common schema combinations. When enabled, invalid structured output is returned as an error rather than a successful completion.
-
-## HTTP limits
-
-The server accepts requests with:
-
-- Headers up to 64 KiB
-- Bodies up to 10 MiB
-- A 30-second timeout for incomplete requests
-
-Oversized requests return `413 Payload Too Large`. Malformed requests return `400 Bad Request`. Requests must provide a regular `Content-Length` body; chunked transfer encoding is not supported.
-
-## Example
-
-```bash
-curl --no-buffer http://127.0.0.1:8080/v1/chat/completions \
-  -H 'Content-Type: application/json' \
-  -d '{"model":"apple-foundation-model","stream":true,"messages":[{"role":"user","content":"Explain Swift in one sentence."}]}'
-```
-
-## Am I the first one with this idea?
-
-Of course not! Here are some examples of same idea and different approach:
-
-* [tucats/fmProxy](https://github.com/tucats/fmProxy) ==> Swift, but using the Ollama API instead
-* [gregbarbosa/fm-proxy](https://github.com/gregbarbosa/fm-proxy) ==> node.js, with more features
-* [shibukawa/fmproxy](https://github.com/shibukawa/fmproxy) ==> GoLang
+See [LICENSE](LICENSE).

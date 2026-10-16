@@ -104,6 +104,22 @@ struct ChatCompletionsHandler: Sendable {
             throw RequestValidationError.message("unsupported message role")
         }
 
+        for message in request.messages {
+            guard case .parts(let parts)? = message.content else { continue }
+            for part in parts {
+                switch part.type {
+                case "text":
+                    guard part.text != nil else {
+                        throw RequestValidationError.message("text content part requires text")
+                    }
+                case "image_url":
+                    _ = try part.decodedImageData()
+                default:
+                    throw RequestValidationError.message("unsupported content part type: \(part.type ?? "missing")")
+                }
+            }
+        }
+
         if let responseFormat = request.responseFormat {
             switch responseFormat.type {
             case "text":
