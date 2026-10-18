@@ -147,6 +147,7 @@ xcodebuild \
 - [tucats/fmProxy](https://github.com/tucats/fmProxy)
 - [gregbarbosa/fm-proxy](https://github.com/gregbarbosa/fm-proxy)
 - [shibukawa/fmproxy](https://github.com/shibukawa/fmproxy)
+- [1duo/apple-fm-serve](https://github.com/1duo/apple-fm-serve)
 
 ## License
 
